@@ -2,7 +2,7 @@ const DEV_MODE = ArrayOptFirstElem(XQuery(`sql:
 	SELECT id
 	FROM dbo.custom_web_templates
 	WHERE code = 'petrovich_personnel_reserve_42487_backend' --Код шаблона
-		AND enable_anonymous_access = true`)) != undefined
+		AND enable_anonymous_access = 1`)) != undefined
 if (DEV_MODE) {
 	// Для тестирования, шаблон должен быть анонимным.
 	Request.AddRespHeader("Access-Control-Allow-Origin", "*", false);
