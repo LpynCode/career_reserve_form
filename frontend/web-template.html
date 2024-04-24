@@ -1,0 +1,17 @@
+<% 
+/*<script>*/
+
+function GetParam(name) {
+    return tools_web.get_web_param( curParams, name, "NaN", 0);
+}
+
+var mainPage = LoadFileData(UrlToFilePath("x-local://wt/web/petrovich/frontend/dist/index.html"));
+%>
+
+<script>
+    window._app = { backendID: "<%= OptInt(GetParam('BACKEND_ID')) %>", curUserID: '<%= OptInt(curUserID) %>' };    
+</script>
+
+<%
+    Response.Write(mainPage);
+%>
