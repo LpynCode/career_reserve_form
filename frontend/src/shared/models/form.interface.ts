@@ -13,12 +13,14 @@ interface ICorpUnivercityFormBlock {
 }
 
 export interface IApplicationForm {
+    code?: string;
+
     isDraft: boolean;
-    target_position_id: string;
-    current_position_id: string;
+    target_position: string;
+    current_position: string;
     experience_in_current_position: number;
     general_experience: number;
-    subdivision_id: string;
+    subdivision: string;
 
     education: IEducationFormBlock[];
 
@@ -32,5 +34,6 @@ export interface IApplicationForm {
     private_email: string;
     corporate_email: string;
 
-    boss_id: string;
+    boss: string;
+
 }

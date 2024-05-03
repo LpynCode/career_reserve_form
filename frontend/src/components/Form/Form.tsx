@@ -5,43 +5,60 @@ import { validatePhone } from "../../helpers/phone-validator"
 import { requiredField } from "../../constants/required-field"
 import { EducationFormBlock } from "../EducationFormBlock/EducationFormBlock"
 import { CorporateUnivercityBlock } from "../CorporateUnivercityBlock/CorporateUnivercityBlock"
-import { createRequest } from "../../api/requests"
+import { createRequest, removeRequest } from "../../api/requests"
 import { curUserID } from "../../config/global"
+import { openNotification } from "../../helpers/open-notification"
+import { BossStageForm } from "../BossStageForm/BossStageForm"
 
-export const ApplicationForm = ({positions, reserveTypes, setError, subdivisions, bosses, educationTypes, ...props}: ApplicationFormProps) => {
+export const ApplicationForm = ({
+    positions,
+    reserveTypes, 
+    setError, 
+    subdivisions, 
+    bosses,
+    educationTypes, 
+    formData,
+    disabled,
+    isFirst,
+    initialValues,
+    ...props
+}: ApplicationFormProps) => {
     const [api, contextHolder] = notification.useNotification();
     const [form] = Form.useForm<IApplicationForm>();
 
     const onFinish = (data: IApplicationForm) => {
-        createRequest({...data, private_phone_number: "+7" + data.private_phone_number, work_phone_number: "+7" + data.work_phone_number})
-            .then(({message}) => openNotification(message))
+        const form_id = formData ? formData.id : "";
+        createRequest({...data, form_id, private_phone_number: "+7" + data.private_phone_number, work_phone_number: "+7" + data.work_phone_number})
+            .then(({message}) => openNotification(message, api))
             .catch(setError)
     }
 
     const onDraftClick = () => {
         const data = form.getFieldsValue();
+        const form_id = formData ? formData.id : "";
         createRequest({
             ...data, 
+            form_id,
             private_phone_number: data.private_phone_number ? "+7"+data.private_phone_number : "", 
             work_phone_number: data.work_phone_number ? "+7"+data.work_phone_number: "", 
             isDraft: true
         })
-            .then(({message}) => openNotification(message))
+            .then(({message}) => openNotification(<Space>
+                <span>{message}</span>
+                <Button onClick={redirectToRequestsPage} type="primary">ОК</Button>
+            </Space>, api))
             .catch(setError)
     }
 
-    const openNotification = (text: string) => {
-        api.open({
-            message: 'Успешно',
-            description:(
-                <Space>
-                    <span>{text}</span>
-                    <Button onClick={redirectToRequestsPage} type="primary">ОК</Button>
-                </Space>
-            ),
-            placement: 'top'
-        });
-    };
+    const onRemoveClick = () => {
+        if(!formData) return;
+        removeRequest(formData.id)
+            .then(({message}) => openNotification(<Space>
+                <span>{message}</span>
+                <Button onClick={redirectToRequestsPage} type="primary">ОК</Button>
+            </Space>, api))
+            .catch(setError)
+    }
 
     const redirectToRequestsPage = () => {
         window.location.href = `/requests/${curUserID}`
@@ -50,15 +67,17 @@ export const ApplicationForm = ({positions, reserveTypes, setError, subdivisions
         <>
             {contextHolder}
             <Form 
+                disabled={disabled}
                 form={form}
                 onFinish={onFinish} 
+                initialValues={initialValues}
                 {...props}
             >
-                <Form.Item label="Целевая должность" name="target_position_id" rules={[requiredField]}>
+                <Form.Item label="Целевая должность" name="target_position" rules={[requiredField]}>
                     <Select options={reserveTypes} />
                 </Form.Item>
 
-                <Form.Item label="Текущая должность" name="current_position_id" rules={[requiredField]}>
+                <Form.Item label="Текущая должность" name="current_position" rules={[requiredField]}>
                     <Select options={positions} />
                 </Form.Item>
 
@@ -70,12 +89,12 @@ export const ApplicationForm = ({positions, reserveTypes, setError, subdivisions
                     <Input type="number" />
                 </Form.Item>
 
-                <Form.Item label="Подразделение" name="subdivision_id" rules={[requiredField]}>
+                <Form.Item label="Подразделение" name="subdivision" rules={[requiredField]}>
                     <Select options={subdivisions} />
                 </Form.Item>
 
                 <EducationFormBlock educationTypes={educationTypes}/>
-                <CorporateUnivercityBlock/>
+                <CorporateUnivercityBlock disabled={disabled}/>
 
                 <Form.Item label="Опыт участия в комитетах и наставничестве" name="mentoring_experience" rules={[requiredField]}>
                     <Input />
@@ -97,20 +116,27 @@ export const ApplicationForm = ({positions, reserveTypes, setError, subdivisions
                     <Input />
                 </Form.Item>
 
-                <Form.Item label="Руководитель" name="boss_id" rules={[requiredField]}>
+                <Form.Item label="Руководитель" name="boss" rules={[requiredField]}>
                     <Select options={bosses}/>
                 </Form.Item>
 
-                <Space>
+                {formData?.state === 'mentor' && <BossStageForm initialValues={initialValues} setError={setError} formData={formData} disabled={true}/>}
+
+                {!disabled && <Space>
+                     {!isFirst && 
+                        <Form.Item>
+                            <Button onClick={onRemoveClick} danger type="primary">Удалить</Button>
+                        </Form.Item>
+                    }
                     <Form.Item>
                         <Button onClick={onDraftClick} type="primary">Сохранить как черновик</Button>
                     </Form.Item>
                     <Form.Item >
                         <Button htmlType="submit">Создать</Button>
                     </Form.Item>
-                </Space>
+                </Space>}
+                
             </Form>
         </>
-        
     )
 }

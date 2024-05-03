@@ -4,8 +4,8 @@ import { requiredField } from "../../constants/required-field";
 import { useState } from "react";
 
 
-export const CorporateUnivercityBlock = () => {
-    const [isDisabled, setIsDisabled] = useState<boolean>(false); 
+export const CorporateUnivercityBlock = ({disabled}: {disabled?: boolean}) => {
+    const [isDisabled, setIsDisabled] = useState<boolean>(disabled || false); 
 
     const onSelectYear = (value: string) => {
         setIsDisabled(value === 'Не проходил');
